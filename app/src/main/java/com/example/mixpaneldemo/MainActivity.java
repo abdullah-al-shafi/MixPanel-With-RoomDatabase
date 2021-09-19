@@ -32,6 +32,14 @@ public class MainActivity extends AppCompatActivity {
 
         mMixpanel = MixpanelAPI.getInstance(this, "5a955118f54c13439ff3191876d0d659");
 
+        // Ensure all future events sent from
+// the device will have the distinct_id 13793
+        mMixpanel.identify("01799747472");
+
+// Ensure all future user profile properties sent from
+// the device will have the distinct_id 13793
+        mMixpanel.getPeople().identify("01799747472");
+
         dataShow = findViewById(R.id.dataShow);
 
         cartMedicineDB = MyCartMedicineDB.getInstance(this);
@@ -49,7 +57,17 @@ public class MainActivity extends AppCompatActivity {
     private void addDataToRoomDatabase() {
         MyCartMedicine cartMedicine = new MyCartMedicine(0,"aaaa",10,"peace",10.00);
         cartMedicineDB.cartMedicineDao().insert(cartMedicine);
+        try {
+            sendToMixpanelAddToRemote(cartMedicine);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
         MyCartMedicine cartMedicine2 = new MyCartMedicine(1,"bbbb",20,"peace",10.00);
+        try {
+            sendToMixpanelAddToRemote(cartMedicine2);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
         cartMedicineDB.cartMedicineDao().insert(cartMedicine2);
 
         showDAta();
@@ -60,18 +78,19 @@ public class MainActivity extends AppCompatActivity {
         myCartMedicines.addAll(cartMedicineDB.cartMedicineDao().getAll());
         dataShow.setText(myCartMedicines.toString()+"");
         Toast.makeText(this, "Now Show"+myCartMedicines.toString(), Toast.LENGTH_SHORT).show();
+
     }
 
 
-    private void sendToMixpanel() throws JSONException {
-        JSONObject props = new JSONObject();
-        props.put("source", "Pat's affiliate site");
-        props.put("Opted out of email", true);
-        mMixpanel.track("Sign Up", props);
-    }
+
 
     public void update(View view) {
         MyCartMedicine cartMedicine2 = new MyCartMedicine(0,"zzzzz",100,"pack",500.00);
+        try {
+            sendToMixpanelUpdateToRemote(cartMedicine2);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
         cartMedicineDB.cartMedicineDao().update(cartMedicine2);
         showDAta();
     }
@@ -83,9 +102,39 @@ public class MainActivity extends AppCompatActivity {
 
     public void delete(View view) {
         if (myCartMedicines.size()>0)
+            try {
+                sendToMixpanelAddToRemote(myCartMedicines.get(0));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
             cartMedicineDB.cartMedicineDao().delete(myCartMedicines.get(0));
             showDAta();
 
 
+    }
+
+
+    private void sendToMixpanel() throws JSONException {
+        JSONObject props = new JSONObject();
+        props.put("source", "Pat's affiliate site");
+        props.put("Opted out of email", true);
+        mMixpanel.track("Sign Up", props);
+    }
+
+    private void sendToMixpanelAddToRemote(MyCartMedicine cartMedicine) throws JSONException {
+        JSONObject props = new JSONObject();
+        props.put("data", cartMedicine);
+        mMixpanel.track("Data Add", props);
+    }
+
+    private void sendToMixpanelUpdateToRemote(MyCartMedicine cartMedicine) throws JSONException {
+        JSONObject props = new JSONObject();
+        props.put("data", cartMedicine);
+        mMixpanel.track("Data Add", props);
+    }
+    private void sendToMixpanelDeleteToRemote(MyCartMedicine cartMedicine) throws JSONException {
+        JSONObject props = new JSONObject();
+        props.put("data", cartMedicine);
+        mMixpanel.track("Data Add", props);
     }
 }
